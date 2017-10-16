@@ -8,7 +8,11 @@ using namespace std;
 
 void q_printer1(vector<Process> all_p){
 	if (all_p.size() == 0){
+<<<<<<< HEAD
 		cout << "[Q <empty>]" << endl;
+=======
+		cout << "[Q empty]" << endl;
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 		return;
 	}
 	string q_art;
@@ -22,7 +26,11 @@ void q_printer1(vector<Process> all_p){
 	cout << q_art << endl;
 }
 
+<<<<<<< HEAD
 void SRT(vector<Process> all_p, string fname){
+=======
+void SJF(vector<Process> all_p, string fname){
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 	int t_cs = 8;
 	unsigned int total_p = all_p.size();
 
@@ -41,9 +49,13 @@ void SRT(vector<Process> all_p, string fname){
 	float total_burst_times = 0;
 	float total_wait_time = 0;
 
+<<<<<<< HEAD
 	int preemptions = 0;
 
 	cout << "time " << time << "ms: Simulator started for SRT ";
+=======
+	cout << "time " << time << "ms: Simulator started for SJF ";
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 	q_printer1(ready_q);
 
 	while (serviced_q.size() < total_p){
@@ -51,6 +63,7 @@ void SRT(vector<Process> all_p, string fname){
 
 			if (all_p[i].get_arrival_time() == time
 				&& all_p[i].get_blocked_until() == 0){
+<<<<<<< HEAD
 				//check if the burst time of the process that just arrived is less than the remanining time of the process
 				//currently using the CPU
 				if (burst_end - time > all_p[i].get_burst_time()){
@@ -63,6 +76,10 @@ void SRT(vector<Process> all_p, string fname){
 				else{
 				//print out that a process arrived
 				cout << "time " << time << "ms: Process " << all_p[i].get_id() << " arrived and added to ready queue ";
+=======
+				//print out that a process arrived
+				cout << "time " << time << "ms: Process " << all_p[i].get_id() << " arrived ";
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 
 				if( !ready_q.empty() ) {
 					unsigned int j;
@@ -79,7 +96,10 @@ void SRT(vector<Process> all_p, string fname){
 				else {
 					ready_q.push_back(all_p[i]);
 				}
+<<<<<<< HEAD
 				}
+=======
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 				//ready_q.push_back(all_p[i]);
 				q_printer1(ready_q);
 			}
@@ -106,7 +126,11 @@ void SRT(vector<Process> all_p, string fname){
 
 		// service the process
 		if (ready_q.size() > 0
+<<<<<<< HEAD
 			&& ((/*!cpu_in_use &&*/ time >= burst_end + 8) || time == t_cs*0.5)
+=======
+			&& ((!cpu_in_use && time >= burst_end + 8) || time == t_cs*0.5)
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 			&& time >= ready_q[0].get_blocked_until() + 4){
 
 			current_process = ready_q[0].get_id();
@@ -149,12 +173,16 @@ void SRT(vector<Process> all_p, string fname){
 
 				all_p[current_process_index].set_blocked_until(time +
 					all_p[current_process_index].get_io_time());
+<<<<<<< HEAD
 				if (all_p[current_process_index].get_burst_count() == 1){
 					cout << all_p[current_process_index].get_burst_count() << " burst to go ";
 				}
 				else {
 					cout << all_p[current_process_index].get_burst_count() << " bursts to go ";
 				}
+=======
+				cout << all_p[current_process_index].get_burst_count() << " to go ";
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 				q_printer1(ready_q);
 				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " blocked on I/O until time ";
 				cout << all_p[current_process_index].get_blocked_until() << "ms ";
@@ -183,7 +211,11 @@ void SRT(vector<Process> all_p, string fname){
 		time++;
 	}
 	time += (t_cs/2)-1;
+<<<<<<< HEAD
 	cout << "time " << time << "ms: Simulator ended for SRT" << endl;
+=======
+	cout << "time " << time << "ms: Simulator ended for SJF" << endl;
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 
 	float avg_tat = total_turn_around_time / float(context_switches);
 
@@ -191,7 +223,11 @@ void SRT(vector<Process> all_p, string fname){
 
 	float avg_wt = total_wait_time / float(context_switches);
 
+<<<<<<< HEAD
 	file_writer(avg_bt, avg_wt, avg_tat, context_switches, preemptions, fname, "SJF");
+=======
+	file_writer(avg_bt, avg_wt, avg_tat, context_switches, 0, fname, "SJF");
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 }
 
 void RR(vector<Process> all_p, string fname){
@@ -389,7 +425,11 @@ int main(int argc, char * argv[]){
 
 	FCFS(all_processes, fname);
 	cout << endl;
+<<<<<<< HEAD
 	SRT(all_processes, fname);
+=======
+	SJF(all_processes, fname);
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 	cout << endl;
 	RR(all_processes, fname);
 

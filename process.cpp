@@ -4,7 +4,10 @@ Process::Process() {
 	id = "";
 	arrival_time = 0;
 	burst_time = 0;
+<<<<<<< HEAD
 	remaining_burst_time = 0;
+=======
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 	burst_count = 0;
 	io_time = 0;
 	
@@ -19,7 +22,10 @@ Process::Process(string id1, int arrival_time1, int burst_time1, int burst_count
 	id = id1;
 	arrival_time = arrival_time1;
 	burst_time = burst_time1;
+<<<<<<< HEAD
 	remaining_burst_time = burst_time1;
+=======
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 	burst_count = burst_count1;
 	io_time = io_time1;
 
@@ -39,9 +45,12 @@ int Process::get_arrival_time() const{
 int Process::get_burst_time() const{
 	return burst_time;
 }
+<<<<<<< HEAD
 int Process::get_remaining_burst_time() const{
         return remaining_burst_time;
 }
+=======
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
 int Process::get_burst_count() const{
 	return burst_count;
 }
@@ -73,8 +82,12 @@ void Process::decrease_bursts() {
 
 void Process::set_serviced() {
 	serviced = true;
+<<<<<<< HEAD
 }
 
 void Process::set_remaining_burst_time(int b){
 	remaining_burst_time = b;
 }
+=======
+}
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9

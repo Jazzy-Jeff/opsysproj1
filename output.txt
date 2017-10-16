@@ -397,6 +397,7 @@ Algorithm RR
 -- total number of context switches: 8
 -- total number of preemptions: 0
 
+<<<<<<< HEAD
 Algorithm FCFS
 -- average CPU burst time: 25.25 ms
 -- average wait time: 4.50 ms
@@ -544,3 +545,5 @@ Algorithm FCFS
 -- total number of context switches: 13
 -- total number of preemptions: 0
 
+=======
+>>>>>>> ce4b36030526642dec0402ee3b76062eb4f976a9
