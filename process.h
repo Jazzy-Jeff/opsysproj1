@@ -10,6 +10,7 @@ public:
 	string get_id() const;
 	int get_arrival_time() const;
 	int get_burst_time() const;
+	int get_remaining_burst_time() const;
 	int get_burst_count() const;
 	int get_io_time() const;
 	int get_turn_time() const;
@@ -21,11 +22,13 @@ public:
 	void set_blocked_until(int b);
 	void decrease_bursts();
 	void set_serviced();
+	void set_remaining_burst_time(int b);
 
 private:
 	string id;
 	int arrival_time;
 	int burst_time;
+	int remaining_burst_time;
 	int burst_count;
 	int io_time;
 
