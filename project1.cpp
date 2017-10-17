@@ -33,6 +33,7 @@ void SRT(vector<Process> all_p, string fname){
 	string current_process;
 
 	bool cpu_in_use = false;
+	bool preempted = false;
 	vector<Process> ready_q;
 	vector<Process> serviced_q;
 
@@ -54,58 +55,93 @@ void SRT(vector<Process> all_p, string fname){
 				//check if the burst time of the process that just arrived is less than the remanining time of the process
 				//currently using the CPU
 				if (burst_end - time > all_p[i].get_burst_time()){
-					cout << "time: " << time << "ms: Process " << all_p[i].get_id() << " arrived and will preempt ";
+					cout << "time " << time << "ms: Process " << all_p[i].get_id() << " arrived and will preempt ";
 					cout << all_p[current_process_index].get_id() << " ";
-					
+					all_p[current_process_index].set_remaining_burst_time(burst_end-time);
+					q_printer1(ready_q);
+					ready_q.insert(ready_q.begin(), all_p[current_process_index]);
 					current_process_index = i;
 					preemptions++;
+					preempted = true;
 				}
 				else{
-				//print out that a process arrived
-				cout << "time " << time << "ms: Process " << all_p[i].get_id() << " arrived and added to ready queue ";
+					//print out that a process arrived
+					cout << "time " << time << "ms: Process " << all_p[i].get_id() << " arrived and added to ready queue ";
 
-				if( !ready_q.empty() ) {
-					unsigned int j;
-					for(j=0; j<ready_q.size();j++) {
-						if( all_p[i].get_burst_time() < ready_q[j].get_burst_time() ) {
-							ready_q.insert(ready_q.begin() + j, all_p[i]);
-							break;
+					if( !ready_q.empty() ) {
+						unsigned int j;
+						for(j=0; j<ready_q.size();j++) {
+							if( all_p[i].get_burst_time() < ready_q[j].get_burst_time() ) {
+								ready_q.insert(ready_q.begin() + j, all_p[i]);
+								break;
+							}
+						}
+						if(j==ready_q.size()) {
+							ready_q.push_back(all_p[i]);
 						}
 					}
-					if(j==ready_q.size()) {
+					else {
 						ready_q.push_back(all_p[i]);
 					}
-				}
-				else {
-					ready_q.push_back(all_p[i]);
-				}
+					q_printer(ready_q);
 				}
 				//ready_q.push_back(all_p[i]);
-				q_printer1(ready_q);
+				//q_printer1(ready_q);
 			}
 			else if (all_p[i].get_blocked_until() == time && all_p[i].get_arrival_time() < time){
-				if( !ready_q.empty() ) {
-					unsigned int j;
-					for(j=0; j<ready_q.size();j++) {
-						if( all_p[i].get_burst_time() < ready_q[j].get_burst_time() ) {
-							ready_q.insert(ready_q.begin() + j, all_p[i]);
-							break;
+				//check if the burst time of the process that just arrived is less than the remanining time of the process
+                                //currently using the CPU
+                                if (burst_end - time > all_p[i].get_burst_time()){
+                                        cout << "time " << time << "ms: Process " << all_p[i].get_id() << " completed I/O and will preempt ";
+                                        cout << all_p[current_process_index].get_id() << " ";
+                                        all_p[current_process_index].set_remaining_burst_time(burst_end-time);
+                                        q_printer1(ready_q);
+                                        ready_q.insert(ready_q.begin(), all_p[current_process_index]);
+                                        current_process_index = i;
+                                        preemptions++;
+                                        preempted = true;
+                                }
+				else{
+					if( !ready_q.empty() ) {
+						unsigned int j;
+						for(j=0; j<ready_q.size();j++) {
+							if( all_p[i].get_burst_time() < ready_q[j].get_burst_time() ) {
+								ready_q.insert(ready_q.begin() + j, all_p[i]);
+								break;
+							}
+						}
+						if(j==ready_q.size()) {
+							ready_q.push_back(all_p[i]);
 						}
 					}
-					if(j==ready_q.size()) {
+					else {
 						ready_q.push_back(all_p[i]);
 					}
+					cout << "time " << time << "ms: Process " << all_p[i].get_id() << " completed I/O; added to ready queue ";
+					q_printer1(ready_q);
 				}
-				else {
-					ready_q.push_back(all_p[i]);
-				}
-				cout << "time " << time << "ms: Process " << all_p[i].get_id() << " completed I/O ";
-				q_printer1(ready_q);
+				//cout << "time " << time << "ms: Process " << all_p[i].get_id() << " completed I/O; added to ready queue ";
 			}
 		}
-
+		//service preemptions
+		if (preempted){
+			preempted = false;
+			context_switches++;
+			time += 8;
+			cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " started using the CPU ";
+			if (all_p[current_process_index].get_burst_time() != all_p[current_process_index].get_remaining_burst_time()){
+                                cout << "with " << all_p[current_process_index].get_remaining_burst_time() << "ms remaining ";
+                        }
+			burst_start = time;
+			if (all_p[current_process_index].get_burst_time() == all_p[current_process_index].get_remaining_burst_time()){
+				burst_end = time + all_p[current_process_index].get_burst_time();
+			}
+			else {burst_end = time + all_p[current_process_index].get_remaining_burst_time();}
+			q_printer1(ready_q);
+			cpu_in_use = true;
+		}
 		// service the process
-		if (ready_q.size() > 0
+		else if(ready_q.size() > 0
 			&& ((/*!cpu_in_use &&*/ time >= burst_end + 8) || time == t_cs*0.5)
 			&& time >= ready_q[0].get_blocked_until() + 4){
 
@@ -119,9 +155,15 @@ void SRT(vector<Process> all_p, string fname){
 			}
 
 			cout << "time " << time << "ms: Process " << ready_q[0].get_id() << " started using the CPU ";
-
+			if (ready_q[0].get_burst_time() != ready_q[0].get_remaining_burst_time()){
+				cout << "with " << ready_q[0].get_remaining_burst_time() << "ms remaining ";
+			}
 			burst_start = time;
-			burst_end = time + ready_q[0].get_burst_time();
+			if (ready_q[0].get_burst_time() == ready_q[0].get_remaining_burst_time()){
+                                burst_end = time + ready_q[0].get_burst_time();
+                        }
+                        else {burst_end = time + ready_q[0].get_remaining_burst_time();}
+			//burst_end = time + ready_q[0].get_burst_time();
 
 			ready_q.erase(ready_q.begin());
 			q_printer1(ready_q);
@@ -146,9 +188,9 @@ void SRT(vector<Process> all_p, string fname){
 			if (all_p[current_process_index].get_burst_count() > 1){
 				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " completed a CPU burst; ";
 				all_p[current_process_index].decrease_bursts();
-
+				all_p[current_process_index].set_remaining_burst_time(all_p[current_process_index].get_burst_time());
 				all_p[current_process_index].set_blocked_until(time +
-					all_p[current_process_index].get_io_time());
+					all_p[current_process_index].get_io_time() + 4);
 				if (all_p[current_process_index].get_burst_count() == 1){
 					cout << all_p[current_process_index].get_burst_count() << " burst to go ";
 				}
@@ -156,14 +198,15 @@ void SRT(vector<Process> all_p, string fname){
 					cout << all_p[current_process_index].get_burst_count() << " bursts to go ";
 				}
 				q_printer1(ready_q);
-				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " blocked on I/O until time ";
+				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " switching out of CPU; ";
+				cout << "will block on I/O until time ";
 				cout << all_p[current_process_index].get_blocked_until() << "ms ";
 				q_printer1(ready_q);
 			}
 			else{
 				all_p[current_process_index].decrease_bursts();
 				all_p[current_process_index].set_blocked_until(time +
-					all_p[current_process_index].get_io_time());
+					all_p[current_process_index].get_io_time() + 4);
 
 				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " terminated ";
 				q_printer1(ready_q);
