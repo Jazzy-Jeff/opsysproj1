@@ -206,13 +206,13 @@ void RR(vector<Process> all_p, string fname){
   int burst_start = 0;
   int current_process_index = 0;
   string current_process;
-  //Process* current_process;
 
   bool cpu_in_use = false;
   vector<Process> ready_q;
   vector<Process> serviced_q;
 
   int context_switches = 0;
+  int total_cpu_bursts = 0;
   float total_turn_around_time = 0;
   float total_burst_times = 0;
   float total_wait_time = 0;
@@ -271,12 +271,14 @@ void RR(vector<Process> all_p, string fname){
     }
     else if(time == burst_start + all_p[current_process_index].get_remaining_burst_time() && current_process_index != -1) { //else if process completes before end of time slice
       burst_end = time;
+      total_cpu_bursts++;
+      
       all_p[current_process_index].set_remaining_burst_time(all_p[current_process_index].get_burst_time());
-      if (!all_p[current_process_index].get_serviced()){
-	total_turn_around_time += (time - all_p[current_process_index].get_arrival_time());
+      if (!all_p[current_process_index].get_serviced()){ // if it's the first burst of process
+	total_turn_around_time += (time - all_p[current_process_index].get_arrival_time() + 4);
       }
-      else{
-	total_turn_around_time += (time - all_p[current_process_index].get_blocked_until());
+      else{ 
+	total_turn_around_time += (time - all_p[current_process_index].get_blocked_until() + 4);
       }
       total_burst_times += (burst_end - burst_start);
       
@@ -284,7 +286,7 @@ void RR(vector<Process> all_p, string fname){
 
       cpu_in_use = false;
       
-      if (all_p[current_process_index].get_burst_count() > 1){
+      if (all_p[current_process_index].get_burst_count() > 1){ // if cpu burst count > 1
 	cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " completed a CPU burst; ";
 	all_p[current_process_index].decrease_bursts();
 
@@ -301,10 +303,9 @@ void RR(vector<Process> all_p, string fname){
 	cout << all_p[current_process_index].get_blocked_until() << "ms ";
 	q_printer1(ready_q);
       }
-      else{
+      else{ // if processes last cpu burst for current process
 	all_p[current_process_index].decrease_bursts();
-	all_p[current_process_index].set_blocked_until(time +
-						       all_p[current_process_index].get_io_time());
+	all_p[current_process_index].set_blocked_until(time + all_p[current_process_index].get_io_time());
 
 	cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " terminated ";
 	q_printer1(ready_q);
@@ -312,19 +313,23 @@ void RR(vector<Process> all_p, string fname){
 	serviced_q.push_back(all_p[current_process_index]);
 	all_p.erase(all_p.begin() + current_process_index);
       }
-      current_process_index = -1;
+      current_process_index = -1; // invalidate current_process_index as no longer applies to current process
     }
-    else if(time == burst_end && burst_end != 0 && current_process_index != -1) {
+    else if(time == burst_end && burst_end != 0 && current_process_index != -1) { // time slice expired
+      total_burst_times += (burst_end - burst_start);
+      
       all_p[current_process_index].set_remaining_burst_time(all_p[current_process_index].get_remaining_burst_time() - t_slice);
-
-      if(ready_q.size() > 0) {
+      
+      if(ready_q.size() > 0) { // preemption occurs
 	cout << "time " << time << "ms: Time slice expired; process " <<  all_p[current_process_index].get_id() << " preempted with ";
 	cout << all_p[current_process_index].get_remaining_burst_time() << "ms to go ";
 	cpu_in_use = false;
 	q_printer1(ready_q);
-	ready_q.push_back(all_p[current_process_index]); 
+	ready_q.push_back(all_p[current_process_index]);
+	preemptions++;
+	current_process_index = -1;
       }
-      else {
+      else { // ready queue empty, no preemption
 	cout << "time " << time << "ms: Time slice expired; no preemption because ready queue is empty ";
 	q_printer1(ready_q);
 	burst_start = time;
@@ -333,24 +338,24 @@ void RR(vector<Process> all_p, string fname){
       }
       
     }
-
-    if (ready_q.size() > 0 && cpu_in_use){
+    total_wait_time += ready_q.size();
+    /*if (cpu_in_use){
       total_wait_time += ready_q.size();
     }
-    else if (ready_q.size() && !cpu_in_use){
+    else if (ready_q.size() > 0 && !cpu_in_use){
       total_wait_time += (ready_q.size()-1);
-    }
+      }*/
     //go again!
     time++;
   }
   time += (t_cs/2)-1;
   cout << "time " << time << "ms: Simulator ended for RR" << endl;
 
-  float avg_tat = total_turn_around_time / float(context_switches);
+  float avg_tat = total_turn_around_time / float(total_cpu_bursts);
 
-  float avg_bt = total_burst_times / float(context_switches);
+  float avg_bt = total_burst_times / float(total_cpu_bursts);
 
-  float avg_wt = total_wait_time / float(context_switches);
+  float avg_wt = (total_wait_time - 4*context_switches) / float(total_cpu_bursts);
 
   file_writer(avg_bt, avg_wt, avg_tat, context_switches, preemptions, fname, "RR");
 }
