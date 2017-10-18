@@ -32,7 +32,7 @@ void SRT(vector<Process> all_p, string fname){
 	int current_process_index = 0;
 	string current_process;
 
-	bool cpu_in_use = false;
+	//bool cpu_in_use = false;
 	bool preempted = false;
 	vector<Process> ready_q;
 	vector<Process> serviced_q;
@@ -127,7 +127,10 @@ void SRT(vector<Process> all_p, string fname){
 		if (preempted){
 			preempted = false;
 			context_switches++;
+			total_burst_times += time - burst_start;
 			time += 8;
+			//total_wait_time += ready_q.size()*8;
+			//total_burst_times += (burst_end - burst_start);
 			cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " started using the CPU ";
 			if (all_p[current_process_index].get_burst_time() != all_p[current_process_index].get_remaining_burst_time()){
                                 cout << "with " << all_p[current_process_index].get_remaining_burst_time() << "ms remaining ";
@@ -138,7 +141,7 @@ void SRT(vector<Process> all_p, string fname){
 			}
 			else {burst_end = time + all_p[current_process_index].get_remaining_burst_time();}
 			q_printer1(ready_q);
-			cpu_in_use = true;
+			//cpu_in_use = true;
 		}
 		// service the process
 		else if(ready_q.size() > 0
@@ -168,19 +171,21 @@ void SRT(vector<Process> all_p, string fname){
 			ready_q.erase(ready_q.begin());
 			q_printer1(ready_q);
 
-			cpu_in_use = true;
+			//cpu_in_use = true;
 		}
 		else if (time == burst_end && burst_end != 0){
 
 			if (!all_p[current_process_index].get_serviced()){
 				total_turn_around_time += (burst_end - all_p[current_process_index].get_arrival_time());
+				//total_burst_times += (burst_end - all_p[current_process_index].get_arrival_time());
 			}
 			else{
 				total_turn_around_time += (burst_end - all_p[current_process_index].get_blocked_until());
 			}
 			total_burst_times += (burst_end - burst_start);
+			//total_turn_around_time += time - burst_start;
 
-			cpu_in_use = false;
+			//cpu_in_use = false;
 			all_p[current_process_index].set_serviced();
 			//decrease the burst count
 			//if burst count > 0 throw back in q and update blocked until
@@ -204,6 +209,7 @@ void SRT(vector<Process> all_p, string fname){
 				q_printer1(ready_q);
 			}
 			else{
+				//total_turn_around_time += (burst_end - all_p[current_process_index].get_arrival_time());
 				all_p[current_process_index].decrease_bursts();
 				all_p[current_process_index].set_blocked_until(time +
 					all_p[current_process_index].get_io_time() + 4);
@@ -216,25 +222,27 @@ void SRT(vector<Process> all_p, string fname){
 			}
 		}
 
-		if (ready_q.size() > 0 && cpu_in_use){
-			total_wait_time += ready_q.size();
-		}
+		/*if (ready_q.size() > 0 && cpu_in_use){
+		*/	total_wait_time += ready_q.size();
+		/*}
 		else if (ready_q.size() && !cpu_in_use){
 			total_wait_time += (ready_q.size()-1);
-		}
+		}*/
 		//go again!
 		time++;
 	}
 	time += (t_cs/2)-1;
+	//total_wait_time = total_wait_time - (context_switches-preemptions)*4;
+	total_wait_time = total_wait_time + 4*(preemptions-2);
 	cout << "time " << time << "ms: Simulator ended for SRT" << endl;
 
-	float avg_tat = total_turn_around_time / float(context_switches);
+	float avg_tat = (total_turn_around_time+4*(context_switches-preemptions)) / float(context_switches - preemptions);
 
-	float avg_bt = total_burst_times / float(context_switches);
+	float avg_bt = total_burst_times / float(context_switches - preemptions);
 
-	float avg_wt = total_wait_time / float(context_switches);
+	float avg_wt = total_wait_time / float(context_switches - preemptions);
 
-	file_writer(avg_bt, avg_wt, avg_tat, context_switches, preemptions, fname, "SJF");
+	file_writer(avg_bt, avg_wt, avg_tat, context_switches, preemptions, fname, "SRT");
 }
 
 void RR(vector<Process> all_p, string fname){
