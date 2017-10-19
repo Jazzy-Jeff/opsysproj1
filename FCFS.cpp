@@ -117,7 +117,8 @@ void FCFS(vector<Process> all_p, string fname){
 					cout << " bursts to go ";
 				}
 				q_printer(ready_q);
-				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " switching out of CPU; will block on I/O until time ";
+				cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id();
+				cout << " switching out of CPU; will block on I/O until time ";
 				cout << all_p[current_process_index].get_blocked_until() << "ms ";
 				q_printer(ready_q);
 			}
@@ -150,20 +151,20 @@ void FCFS(vector<Process> all_p, string fname){
                         }
                 }
 
-
-		if (ready_q.size() > 0 && cpu_in_use){
+		/*if (ready_q.size() > 0 && cpu_in_use){*/
 			total_wait_time += ready_q.size();
-		}
+		/*}
 		else if (ready_q.size() && !cpu_in_use){
 			total_wait_time += (ready_q.size()-1);
-		}
+		}*/
 		//go again!
 		time++;
 	}
 	time += (t_cs/2)-1;
+	total_wait_time = total_wait_time - (4*context_switches);
 	cout << "time " << time << "ms: Simulator ended for FCFS" << endl;
 
-	float avg_tat = total_turn_around_time / float(context_switches);
+	float avg_tat = (total_turn_around_time+context_switches*4) / float(context_switches);
 
 	float avg_bt = total_burst_times / float(context_switches);
 

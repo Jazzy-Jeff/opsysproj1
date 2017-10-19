@@ -16,6 +16,5 @@ void file_writer(float avg_bt, float avg_wt, float avg_tat, int context_switches
 	myfile << "-- average turnaround time: " << setprecision(2) << fixed << avg_tat << " ms" << endl;
 	myfile << "-- total number of context switches: " << context_switches << endl;
 	myfile << "-- total number of preemptions: " << preemptions << endl;
-	myfile << endl;
 	myfile.close();
 }
