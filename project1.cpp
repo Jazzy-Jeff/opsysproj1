@@ -1,3 +1,7 @@
+//Isaac Dugas dugasi
+//Jeff Willoughby willoj
+//Gabe Langlois langlg
+
 #include <iostream>
 #include <fstream>
 #include <algorithm>  
@@ -7,10 +11,12 @@
 #include <stdlib.h>
 using namespace std;
 
+//function to sort processes by their id
 bool sort_processes(Process p1, Process p2) {
   return p1.get_id() < p2.get_id();
 }
 
+//function to print the queue
 void q_printer1(vector<Process> all_p){
   if (all_p.size() == 0){
     cout << "[Q <empty>]" << endl;
@@ -27,7 +33,7 @@ void q_printer1(vector<Process> all_p){
   cout << q_art << endl;
 }
 
-
+//Function to apply shortest remaining time algorithm
 void SRT(vector<Process> all_p, string fname){
   int t_cs = 8;
   unsigned int total_p = all_p.size();
@@ -52,11 +58,11 @@ void SRT(vector<Process> all_p, string fname){
 
   cout << "time " << time << "ms: Simulator started for SRT ";
   q_printer1(ready_q);
-  
-  while (serviced_q.size() < total_p){
-    // service the process
+
+  while (serviced_q.size() < total_p){ //while all processes have not finished
+    // service new current process
     if((preempted && time >= burst_end) || (current_process_index != -1 && ((!cpu_in_use && time >= burst_end) || time == t_cs*0.5)
-		     && time >= all_p[current_process_index].get_blocked_until() + 4)){
+		     && time >= all_p[current_process_index].get_blocked_until() + 4)){ 
       context_switches++;
 
       cout << "time " << time << "ms: Process " << all_p[current_process_index].get_id() << " started using the CPU ";
@@ -75,7 +81,7 @@ void SRT(vector<Process> all_p, string fname){
       preempted = false;
       cpu_in_use = true;
     }
-    else if (time == burst_end && burst_end != 0 && preempted == false && current_process_index != -1){
+    else if (time == burst_end && burst_end != 0 && preempted == false && current_process_index != -1){ // if cpu burst completes
       if (!all_p[current_process_index].get_serviced()){ // if it's the first burst of process
 	total_turn_around_time += (time - all_p[current_process_index].get_arrival_time() + 4);
 	total_wait_time += (time - all_p[current_process_index].get_arrival_time() + 4) - all_p[current_process_index].get_burst_time();
@@ -126,7 +132,7 @@ void SRT(vector<Process> all_p, string fname){
       cpu_in_use = false;
     }
 
-    for (unsigned int i=0; i<all_p.size(); i++){
+    for (unsigned int i=0; i<all_p.size(); i++){ //loop over all processes that have not terminated
       
       if (all_p[i].get_arrival_time() == time
 	  && all_p[i].get_blocked_until() == 0){
@@ -206,6 +212,7 @@ void SRT(vector<Process> all_p, string fname){
 	}
       }
     }
+    //if no current process and cpu is available for new process, start moving process into cpu
     if(current_process_index == -1 && ready_q.size() > 0 && time >= burst_end) {
       current_process = ready_q[0].get_id();
       for (unsigned int i=0; i<all_p.size(); i++){
@@ -233,7 +240,7 @@ void SRT(vector<Process> all_p, string fname){
   file_writer(avg_bt, avg_wt, avg_tat, context_switches, preemptions, fname, "SRT");
 }
 
-
+//Function to apply round robin algorithm
 void RR(vector<Process> all_p, string fname){
   int t_slice = 70;
   int preemptions = 0;
@@ -249,7 +256,7 @@ void RR(vector<Process> all_p, string fname){
   bool cpu_in_use = false;
   vector<Process> ready_q;
   vector<Process> serviced_q;
-  //vector<Process> to_add_q;
+  Process* to_add_q;
 
   int context_switches = 0;
   int total_cpu_bursts = 0;
@@ -260,9 +267,8 @@ void RR(vector<Process> all_p, string fname){
   cout << "time " << time << "ms: Simulator started for RR ";
   q_printer1(ready_q);
   
-  while (serviced_q.size() < total_p){
-    //to_add_q.clear();
-    //q_printer1(ready_q);
+  while (serviced_q.size() < total_p){ //while there are processes that have not terminated
+    to_add_q = NULL;;
     // service the process
     if (current_process_index != -1
 	&& ((!cpu_in_use && time >= burst_end) || time == t_cs*0.5)
@@ -341,11 +347,12 @@ void RR(vector<Process> all_p, string fname){
       all_p[current_process_index].set_remaining_burst_time(all_p[current_process_index].get_remaining_burst_time() - t_slice);
       
       if(ready_q.size() > 0) { // preemption occurs
-	cout << "time " << time << "ms: Time slice expired; process " <<  all_p[current_process_index].get_id() << " preempted with ";
-	cout << all_p[current_process_index].get_remaining_burst_time() << "ms to go ";
+	//cout << "time " << time << "ms: Time slice expired; process " <<  all_p[current_process_index].get_id() << " preempted with ";
+	//cout << all_p[current_process_index].get_remaining_burst_time() << "ms to go ";
+	to_add_q = &all_p[current_process_index];
 	cpu_in_use = false;
-	q_printer1(ready_q);
-	ready_q.push_back(all_p[current_process_index]);
+	//q_printer1(ready_q);
+	//ready_q.push_back(all_p[current_process_index]);
 	preemptions++;
 	current_process_index = -1;
 	burst_end = time + 4;
@@ -359,9 +366,17 @@ void RR(vector<Process> all_p, string fname){
       }
       
     }
-   
+    
     for (unsigned int i=0; i<all_p.size(); i++){
-
+      //when preemption occurs need to print and place in ready queue in alphabetical order when
+      //  processes arrive at the same time, this is how the case is handled
+      if(to_add_q != NULL && (*to_add_q).get_id() <= all_p[i].get_id()) { 
+	cout << "time " << time << "ms: Time slice expired; process " <<  (*to_add_q).get_id() << " preempted with ";
+	cout << (*to_add_q).get_remaining_burst_time() << "ms to go ";
+	q_printer1(ready_q);
+	ready_q.push_back((*to_add_q));
+	to_add_q = NULL;
+      }
       if (all_p[i].get_arrival_time() == time
 	  && all_p[i].get_blocked_until() == 0){ // if we are at its arrival time and it is not in IO
 	//print out that a process arrived
@@ -376,7 +391,8 @@ void RR(vector<Process> all_p, string fname){
 	q_printer1(ready_q);
       }
     }
-    
+
+    // Update current process when cpu is ready to accept new process
     if(current_process_index == -1 && ready_q.size() > 0 && time >= burst_end) {
       current_process = ready_q[0].get_id();
       for (unsigned int i=0; i<all_p.size(); i++){

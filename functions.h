@@ -1,3 +1,6 @@
+//Isaac Dugas dugasi
+//Jeff Willoughby willoj
+//Gabe Langlois langlg
 
 void q_printer(vector<Process> all_p);
 void FCFS(vector<Process> all_p, string fname);

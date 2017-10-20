@@ -1,3 +1,7 @@
+//Isaac Dugas dugasi
+//Jeff Willoughby willoj
+//Gabe Langlois langlg
+
 #include "process.h"
 
 Process::Process() {
